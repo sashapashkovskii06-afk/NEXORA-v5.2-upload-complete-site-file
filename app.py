@@ -209,7 +209,6 @@ def send_verification(email, code):
     "Authorization": f"Bearer {api_key}",
     "Content-Type": "application/json",
     "User-Agent": "NEXORA/1.0"
-},
         },
         method="POST"
     )
