@@ -13,7 +13,7 @@ from werkzeug.utils import secure_filename
 BASE_DIR = Path(__file__).resolve().parent
 UPLOAD_DIR = BASE_DIR / 'static' / 'uploads'
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-app = Flask(__name__)
+app = Flask(__name__, template_folder=str(BASE_DIR))
 # A stable development fallback keeps sessions consistent across local worker processes.
 # Production deployments must set SECRET_KEY in the hosting dashboard.
 APP_ENV = os.getenv('APP_ENV', 'development').strip().lower()
