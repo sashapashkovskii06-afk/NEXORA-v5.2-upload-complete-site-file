@@ -177,32 +177,56 @@ def save_profile(u, data):
     db.session.commit()
     return data
 
+
 def send_verification(email, code):
-    host = os.getenv('SMTP_HOST'); user = os.getenv('SMTP_USER'); password = os.getenv('SMTP_PASSWORD')
-    sender = os.getenv('SMTP_FROM', user or '')
-    if not host or not sender:
-        if os.getenv('APP_ENV', '').lower() in ('development', 'dev'):
-            app.logger.warning('DEV email code for %s: %s', email, code)
-            return True
-        return False
-    msg = EmailMessage(); msg['Subject'] = 'Your NEXORA verification code'; msg['From'] = sender; msg['To'] = email
-    msg.set_content(f'Your NEXORA verification code is: {code}\n\nIt expires in 15 minutes. If you did not request it, ignore this email.')
-    port = int(os.getenv('SMTP_PORT', '587'))
-    try:
-        if os.getenv('SMTP_SSL', 'false').lower() == 'true':
-            with smtplib.SMTP_SSL(host, port, timeout=15) as s:
-                if user: s.login(user, password or '')
-                s.send_message(msg)
-        else:
-            with smtplib.SMTP(host, port, timeout=15) as s:
-                s.starttls()
-                if user: s.login(user, password or '')
-                s.send_message(msg)
-        return True
-    except Exception:
-        app.logger.exception('SMTP send failed')
+    import os
+    import json
+    import urllib.request
+    import urllib.error
+
+    api_key = os.getenv("RESEND_API_KEY")
+    sender = os.getenv("RESEND_FROM", "onboarding@resend.dev")
+
+    if not api_key:
+        app.logger.error("RESEND_API_KEY is not configured")
         return False
 
+    payload = {
+        "from": sender,
+        "to": [email],
+        "subject": "Your NEXORA verification code",
+        "text": (
+            f"Your NEXORA verification code is: {code}\n\n"
+            "It expires in 15 minutes. "
+            "If you did not request it, ignore this email."
+        )
+    }
+
+    request = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        },
+        method="POST"
+    )
+
+    try:
+        with urllib.request.urlopen(request, timeout=20) as response:
+            app.logger.info("Resend accepted verification email")
+            return 200 <= response.status < 300
+    except urllib.error.HTTPError as error:
+        details = error.read().decode("utf-8", errors="replace")
+        app.logger.error(
+            "Resend email failed: HTTP %s: %s",
+            error.code, details
+        )
+        return False
+    except Exception:
+        app.logger.exception("Resend email request failed")
+        return False
+        
 @app.get('/')
 def index():
     return render_template('index.html')
