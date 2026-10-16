@@ -205,14 +205,15 @@ def send_verification(email, code):
         "https://api.resend.com/emails",
         data=json.dumps(payload).encode("utf-8"),
         headers={
-    "Authorization": f"Bearer {api_key}",
-    "Content-Type": "application/json",
-    "User-Agent": "NEXORA/1.0"
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "User-Agent": "NEXORA/1.0",
         },
-        method="POST"
+        method="POST",
     )
 
     try:
+        
         with urllib.request.urlopen(request, timeout=20) as response:
             app.logger.info("Resend accepted verification email")
             return 200 <= response.status < 300
