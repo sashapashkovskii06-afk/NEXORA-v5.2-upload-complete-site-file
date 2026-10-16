@@ -200,7 +200,6 @@ def send_verification(email, code):
             "It expires in 15 minutes. "
             "If you did not request it, ignore this email."
         )
-    }
 
     request = urllib.request.Request(
         "https://api.resend.com/emails",
