@@ -199,7 +199,8 @@ def send_verification(email, code):
             f"Your NEXORA verification code is: {code}\n\n"
             "It expires in 15 minutes. "
             "If you did not request it, ignore this email."
-        )
+         ),
+    }
 
     request = urllib.request.Request(
         "https://api.resend.com/emails",
